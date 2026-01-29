@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SmartFinance V14 — Modern UI</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-app: #F5F7FA;
+            --bg-card: #FFFFFF;
+            --bg-input: #F3F4F6;
+            
+            --primary: #4F46E5; /* Индиго */
+            --primary-gradient: linear-gradient(135deg, #4F46E5, #818CF8);
+            
+            --success: #059669; /* Изумрудный */
+            --danger: #E11D48;  /* Розовый/Красный */
+            --warning: #D97706; /* Янтарный */
+            
+            --text-main: #1F2937;
+            --text-muted: #6B7280;
+            
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+            --shadow-md: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+            
+            --radius-xl: 24px;
+            --radius-lg: 16px;
+            --radius-md: 12px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-app);
+            color: var(--text-main);
+            margin: 0; padding: 15px;
+            display: flex; justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .app-container { width: 100%; max-width: 440px; padding-bottom: 30px; }
+
+        /* --- Header Card --- */
+        .header-card {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 30px 25px;
+            border-radius: 32px;
+            text-align: center;
+            margin-bottom: 25px;
+            box-shadow: 0 15px 30px -10px rgba(79, 70, 229, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+        .header-card::before { /* Декоративный блик */
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 60%);
+            pointer-events: none;
+        }
+        .month-label { text-transform: uppercase; font-size: 0.75rem; font-weight: 600; letter-spacing: 1px; opacity: 0.8; margin-bottom: 5px;}
+        .balance-val { font-size: 2.8rem; font-weight: 800; letter-spacing: -1px; line-height: 1.1; }
+        .balance-sub { font-size: 0.9rem; opacity: 0.7; font-weight: 500; }
+
+        /* --- General UI --- */
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius-xl);
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+        h2 { font-size: 1rem; font-weight: 700; margin: 0 0 15px 0; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; }
+
+        /* Navigation Btns */
+        .nav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .nav-btn {
+            background: var(--bg-card); border: none;
+            padding: 14px; border-radius: var(--radius-lg);
+            font-weight: 600; color: var(--text-muted);
+            box-shadow: var(--shadow-sm); cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: 0.2s;
+        }
+        .nav-btn:active { transform: scale(0.98); background: var(--bg-input); }
+
+        /* --- Inputs & Tabs --- */
+        .segmented-control {
+            display: flex; background: var(--bg-input);
+            padding: 4px; border-radius: var(--radius-lg);
+            margin-bottom: 15px;
+        }
+        .segment-btn {
+            flex: 1; border: none; padding: 10px;
+            border-radius: var(--radius-md); font-size: 0.9rem; font-weight: 600;
+            cursor: pointer; color: var(--text-muted); transition: 0.3s; background: transparent;
+        }
+        .segment-btn.active { background: var(--bg-card); color: var(--text-main); box-shadow: var(--shadow-sm); }
+        
+        /* Sub-type chips */
+        .chips-container { display: flex; gap: 8px; margin-bottom: 15px; }
+        .chip {
+            border: 1px solid var(--bg-input); background: transparent;
+            padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;
+            color: var(--text-muted); cursor: pointer; transition: 0.2s;
+        }
+        .chip.active.mand { background: #FFFBEB; color: var(--warning); border-color: var(--warning); }
+        .chip.active.opt { background: #EEF2FF; color: var(--primary); border-color: var(--primary); }
+
+        .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        input, select {
+            width: 100%; padding: 16px; border: none;
+            background: var(--bg-input); border-radius: var(--radius-lg);
+            font-size: 1rem; font-weight: 500; color: var(--text-main);
+            outline: none; box-sizing: border-box; transition: 0.2s;
+        }
+        input:focus, select:focus { box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); background: white; }
+
+        .btn-main {
+            width: 100%; border: none; padding: 16px;
+            border-radius: var(--radius-lg); font-size: 1rem; font-weight: 700;
+            color: white; cursor: pointer; transition: 0.3s;
+            background: var(--primary-gradient);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+        }
+        .btn-main:active { transform: scale(0.98); opacity: 0.9; }
+        .btn-main.exp { background: linear-gradient(135deg, #E11D48, #F43F5E); box-shadow: 0 4px 12px rgba(225, 29, 72, 0.2); }
+
+        /* --- History --- */
+        .history-list { margin-top: 10px; }
+        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--bg-input); }
+        .item-left { display: flex; align-items: center; gap: 12px; }
+        .item-icon {
+            width: 40px; height: 40px; border-radius: var(--radius-md);
+            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+        }
+        .item-meta { display: flex; flex-direction: column; }
+        .item-title { font-weight: 600; font-size: 0.95rem; }
+        .item-date { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;}
+        .mand-badge { display: inline-block; font-size: 0.65rem; color: var(--warning); background: #FFFBEB; padding: 2px 6px; border-radius: 6px; font-weight: 700; margin-right: 4px;}
+        
+        .item-right { text-align: right; }
+        .item-amt { font-weight: 700; font-size: 1rem; }
+        .carry-link { font-size: 0.7rem; color: var(--primary); font-weight: 600; text-decoration: none; display: block; margin-top: 4px; cursor: pointer;}
+        .del-btn-icon { color: var(--text-muted); background: none; border: none; font-size: 1.1rem; padding: 5px; cursor: pointer; margin-left: 8px; opacity: 0.5; transition: 0.2s}
+        .del-btn-icon:hover { opacity: 1; color: var(--danger); }
+
+        /* --- Modals --- */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; align-items: flex-end; backdrop-filter: blur(4px); }
+        .modal-content { background: var(--bg-card); width: 100%; border-radius: 32px 32px 0 0; padding: 30px 25px; box-sizing: border-box; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .close-icon { background: var(--bg-input); border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 1.2rem; color: var(--text-muted); cursor: pointer;}
+
+        /* Modern Calendar */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin: 20px auto; max-width: 300px; }
+        .day-cell {
+            aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; font-size: 0.8rem; font-weight: 500;
+            cursor: pointer; position: relative; color: var(--text-main);
+            transition: 0.2s; background: var(--bg-app);
+        }
+        .day-cell.active { background: var(--primary); color: white; font-weight: 700; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); }
+        .day-cell.has-data::after {
+            content: ''; position: absolute; bottom: 4px; width: 4px; height: 4px;
+            background: var(--primary); border-radius: 50%;
+        }
+        .day-cell.active.has-data::after { background: white; }
+
+        /* Categories Edit */
+        .cat-edit-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--bg-app); border-radius: var(--radius-md); margin-bottom: 8px; font-weight: 500;}
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header class="header-card">
+        <div class="month-label" id="monthName">Загрузка...</div>
+        <div class="balance-val" id="totalBalance">0 ₸</div>
+        <div class="balance-sub">Текущий баланс</div>
+    </header>
+
+    <div class="nav-grid">
+        <button class="nav-btn" onclick="openModal('calModal')">📅 Календарь</button>
+        <button class="nav-btn" onclick="openModal('catModal')">⚙️ Категории</button>
+    </div>
+
+    <div class="card">
+        <div class="segmented-control" id="modeTabs">
+            <button class="segment-btn active" onclick="setMode('inc', this)">Доход</button>
+            <button class="segment-btn" onclick="setMode('exp', this)">Расход</button>
+        </div>
+        
+        <div id="subTypeContainer" style="display:none;">
+            <div class="chips-container">
+                <button id="btnMand" class="chip active mand" onclick="setSubType('mandatory', this)">📌 Обязательно</button>
+                <button id="btnOpt" class="chip" onclick="setSubType('optional', this)">☕ По желанию</button>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <input type="number" id="amtIn" placeholder="Сумма" pattern="\d*">
+            <select id="catIn"></select>
+        </div>
+        <button class="btn-main" id="addBtn" onclick="saveEntry()">Добавить запись</button>
+    </div>
+
+    <div class="card">
+        <h2>Структура расходов</h2>
+        <div style="height: 220px; position: relative;">
+            <canvas id="chartCanvas"></canvas>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>
+            История операций
+            <button onclick="resetFilter()" id="resetBtn" style="display:none; background:var(--bg-input); border:none; padding:6px 12px; border-radius:20px; color:var(--primary); font-size:0.75rem; font-weight:600; cursor:pointer;">Показать весь месяц</button>
+        </h2>
+        <div id="histList" class="history-list"></div>
+    </div>
+</div>
+
+<div id="calModal" class="modal" onclick="if(event.target==this) closeModal('calModal')">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Период</h2>
+            <button class="close-icon" onclick="closeModal('calModal')">×</button>
+        </div>
+        <div style="background: var(--bg-input); padding: 10px; border-radius: var(--radius-lg); display: flex; justify-content: center;">
+             <input type="month" id="monthPick" onchange="renderCalendar()" style="background: transparent; border: none; font-weight: 700; text-align: center; padding: 5px;">
+        </div>
+        <div id="calGrid" class="calendar-grid"></div>
+    </div>
+</div>
+
+<div id="catModal" class="modal" onclick="if(event.target==this) closeModal('catModal')">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Категории</h2>
+            <button class="close-icon" onclick="closeModal('catModal')">×</button>
+        </div>
+        <div class="segmented-control">
+            <button class="segment-btn active" id="editTabInc" onclick="renderCatEdit('inc')">Доходы</button>
+            <button class="segment-btn" id="editTabExp" onclick="renderCatEdit('exp')">Расходы</button>
+        </div>
+        <div id="catEditList" style="max-height:250px; overflow-y:auto; margin-bottom:20px;"></div>
+        <div class="input-group">
+            <input type="text" id="newCatName" placeholder="Новая категория">
+            <button class="btn-main" onclick="addCat()" style="width:70px; font-size: 1.2rem; padding: 0;">+</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- JS LOGIC (Core functionality remains same, just connected to new UI) ---
+    let app = {
+        data: JSON.parse(localStorage.getItem('sf_v14_data')) || [],
+        cats: JSON.parse(localStorage.getItem('sf_v14_cats')) || { inc: ['Зарплата', 'Кэшбэк'], exp: ['Продукты', 'Жилье', 'Транспорт', 'Кафе'] },
+        mode: 'inc',
+        subMode: 'mandatory',
+        selDate: new Date().toISOString().substring(0, 10),
+        view: 'month',
+        chart: null,
+        editCatType: 'inc'
+    };
+
+    window.onload = () => {
+        document.getElementById('monthPick').value = app.selDate.substring(0, 7);
+        updateUI();
+    };
+
+    function openModal(id) { 
+        document.getElementById(id).style.display = 'flex'; 
+        if(id==='calModal') renderCalendar(); 
+        if(id==='catModal') renderCatEdit('inc'); 
+    }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    function setMode(m, btn) {
+        app.mode = m;
+        document.querySelectorAll('#modeTabs .segment-btn').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('subTypeContainer').style.display = m === 'exp' ? 'block' : 'none';
+        document.getElementById('addBtn').classList.toggle('exp', m === 'exp');
+        renderCatSelect();
+    }
+
+    function setSubType(s, btn) {
+        app.subMode = s;
+        document.querySelectorAll('#subTypeContainer .chip').forEach(t => t.classList.remove('active', 'mand', 'opt'));
+        btn.classList.add('active', s === 'mandatory' ? 'mand' : 'opt');
+    }
+
+    function renderCatSelect() {
+        document.getElementById('catIn').innerHTML = app.cats[app.mode].map(c => `<option value="${c}">${c}</option>`).join('');
+    }
+
+    function renderCatEdit(type) {
+        app.editCatType = type;
+        document.getElementById('editTabInc').classList.toggle('active', type === 'inc');
+        document.getElementById('editTabExp').classList.toggle('active', type === 'exp');
+        document.getElementById('catEditList').innerHTML = app.cats[type].map((c, i) => `
+            <div class="cat-edit-item">
+                <span>${c}</span>
+                <button onclick="delCat(${i})" style="color:var(--text-muted); border:none; background:none; cursor:pointer; font-size:1.2rem;">×</button>
+            </div>
+        `).join('');
+    }
+
+    function addCat() {
+        const n = document.getElementById('newCatName').value.trim();
+        if(n && !app.cats[app.editCatType].includes(n)) {
+            app.cats[app.editCatType].push(n); localStorage.setItem('sf_v14_cats', JSON.stringify(app.cats));
+            document.getElementById('newCatName').value = ''; renderCatEdit(app.editCatType); renderCatSelect();
+        }
+    }
+
+    function delCat(i) {
+        app.cats[app.editCatType].splice(i, 1); localStorage.setItem('sf_v14_cats', JSON.stringify(app.cats));
+        renderCatEdit(app.editCatType); renderCatSelect();
+    }
+
+    function saveEntry() {
+        const val = parseFloat(document.getElementById('amtIn').value);
+        const cat = document.getElementById('catIn').value;
+        if(!isNaN(val) && val > 0 && cat) {
+            app.data.push({ id: Date.now(), date: app.selDate, amt: val, cat: cat, type: app.mode, sub: app.mode === 'exp' ? app.subMode : 'none' });
+            saveAndRefresh(); document.getElementById('amtIn').value = '';
+        }
+    }
+
+    function carryOver(id) {
+        const item = app.data.find(i => i.id == id); if(!item) return;
+        let parts = item.date.split('-'); let date = new Date(parts[0], parts[1] - 1, parts[2]);
+        date.setMonth(date.getMonth() + 1);
+        let nextMonthStr = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+        app.data.push({ ...item, id: Date.now(), date: nextMonthStr });
+        saveAndRefresh(); alert('Перенесено на следующий месяц');
+    }
+
+    function delItem(id) { app.data = app.data.filter(i => i.id != id); saveAndRefresh(); }
+    function saveAndRefresh() { localStorage.setItem('sf_v14_data', JSON.stringify(app.data)); updateUI(); }
+
+    function updateUI() {
+        const mStr = document.getElementById('monthPick').value;
+        const monthly = app.data.filter(i => i.date.startsWith(mStr));
+        const daily = app.data.filter(i => i.date === app.selDate);
+        const displayData = app.view === 'month' ? monthly : daily;
+
+        document.getElementById('monthName').innerText = new Date(mStr + "-01").toLocaleString('ru', { month: 'long', year: 'numeric' });
+        const inc = monthly.filter(i => i.type === 'inc').reduce((s, i) => s + i.amt, 0);
+        const exp = monthly.filter(i => i.type === 'exp').reduce((s, i) => s + i.amt, 0);
+        document.getElementById('totalBalance').innerText = (inc - exp).toLocaleString() + ' ₸';
+
+        document.getElementById('resetBtn').style.display = app.view === 'day' ? 'inline-block' : 'none';
+        
+        document.getElementById('histList').innerHTML = displayData.length ? displayData.sort((a,b) => b.id - a.id).map(i => {
+            const isInc = i.type === 'inc';
+            const iconBg = isInc ? '#ECFDF5' : '#FFF1F2';
+            const iconColor = isInc ? 'var(--success)' : 'var(--danger)';
+            const iconArrow = isInc ? '↓' : '↑';
+            const amountColor = isInc ? 'var(--success)' : 'var(--text-main)';
+            
+            return `
+            <div class="history-item">
+                <div class="item-left">
+                    <div class="item-icon" style="background:${iconBg}; color:${iconColor}">${iconArrow}</div>
+                    <div class="item-meta">
+                        <span class="item-title">
+                            ${i.sub === 'mandatory' ? '<span class="mand-badge">Обяз.</span>' : ''}
+                            ${i.cat}
+                        </span>
+                        <span class="item-date">${new Date(i.date).toLocaleDateString('ru', {day:'numeric', month:'short'})}</span>
+                    </div>
+                </div>
+                <div class="item-right">
+                    <div class="item-amt" style="color:${amountColor}">${isInc ? '+' : '-'}${i.amt.toLocaleString()}</div>
+                    ${i.sub === 'mandatory' ? `<div class="carry-link" onclick="carryOver(${i.id})">Перенести →</div>` : ''}
+                </div>
+                <button class="del-btn-icon" onclick="delItem(${i.id})">×</button>
+            </div>
+        `}).join('') : '<div style="text-align:center; padding:40px 0; color:var(--text-muted); font-weight:500;">Нет операций</div>';
+
+        renderCatSelect(); drawChart(monthly);
+    }
+
+    function renderCalendar() {
+        const mVal = document.getElementById('monthPick').value;
+        const grid = document.getElementById('calGrid'); grid.innerHTML = '';
+        const [y, m] = mVal.split('-').map(Number);
+        const days = new Date(y, m, 0).getDate();
+        const start = new Date(y, m-1, 1).getDay();
+        const offset = start === 0 ? 6 : start - 1;
+        for (let i = 0; i < offset; i++) grid.appendChild(document.createElement('div'));
+        for (let d = 1; d <= days; d++) {
+            const dateStr = `${mVal}-${d.toString().padStart(2, '0')}`;
+            const cell = document.createElement('div');
+            cell.className = 'day-cell' + (dateStr === app.selDate ? ' active' : '');
+            if(app.data.some(i => i.date === dateStr)) cell.classList.add('has-data');
+            cell.innerText = d;
+            cell.onclick = () => { app.selDate = dateStr; app.view = 'day'; closeModal('calModal'); updateUI(); };
+            grid.appendChild(cell);
+        }
+    }
+
+    function drawChart(data) {
+        const ctx = document.getElementById('chartCanvas').getContext('2d');
+        if(app.chart) app.chart.destroy();
+        const mand = data.filter(i => i.sub === 'mandatory').reduce((s, i) => s + i.amt, 0);
+        const opt = data.filter(i => i.sub === 'optional').reduce((s, i) => s + i.amt, 0);
+        const inc = data.filter(i => i.type === 'inc').reduce((s, i) => s + i.amt, 0);
+        const free = inc - (mand + opt);
+
+        app.chart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Обязательные', 'По желанию', 'Свободно'],
+                datasets: [{
+                    data: [mand, opt, free > 0 ? free : 0],
+                    backgroundColor: ['#D97706', '#4F46E5', '#059669'],
+                    borderWidth: 2, borderColor: '#ffffff', hoverOffset: 5
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, font: {size: 11, family: 'Inter'} } } }, cutout: '75%' }
+        });
+    }
+
+    function resetFilter() { app.view = 'month'; updateUI(); }
+</script>
+</body>
+</html>
